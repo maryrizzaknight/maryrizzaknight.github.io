@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f7f4ef">
+<title>Gentle Movement</title>
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none;}
+:root{
+  --bg:#f7f4ef;--surface:#fff;--s2:#f1ede6;
+  --sage:#5d8f72;--sage-d:#3d6b52;--sage-l:#a8c8b4;--sage-p:#e8f2ec;
+  --terra:#b86848;--terra-l:#f5e0d4;
+  --gold:#9a7c2c;--gold-l:#f5ecd4;
+  --sky:#4a7fa8;--sky-l:#d8eaf5;
+  --deep:#1e2820;--mid:#4a5e50;--soft:#8a9e8f;
+  --border:rgba(93,143,114,0.16);--sh:0 1px 12px rgba(30,40,32,0.07);
+  --r:14px;--rs:9px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--deep);}
+.app{height:100vh;height:100dvh;display:flex;flex-direction:column;max-width:430px;margin:0 auto;}
+.pages{flex:1;overflow:hidden;position:relative;}
+.page{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;display:none;-webkit-overflow-scrolling:touch;padding-bottom:16px;}
+.page.on{display:block;}
+nav{display:flex;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0;padding-bottom:env(safe-area-inset-bottom,0);}
+nav button{flex:1;padding:9px 2px 7px;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;}
+nav button:active{opacity:.6;}
+nav button .ni{font-size:18px;transition:transform .2s;}
+nav button .nl{font-size:9px;color:var(--soft);font-weight:600;text-transform:uppercase;letter-spacing:.07em;}
+nav button.on .ni{transform:translateY(-1px);}
+nav button.on .nl{color:var(--sage);}
+.ph{padding:44px 16px 12px;}
+.ph h1{font-family:'Lora',serif;font-size:24px;font-weight:600;}
+.ph p{font-size:13px;color:var(--soft);margin-top:3px;font-style:italic;font-family:'Lora',serif;}
+.card{background:var(--surface);border-radius:var(--r);padding:15px;box-shadow:var(--sh);border:1px solid var(--border);margin-bottom:11px;}
+.ct{font-size:10px;font-weight:600;color:var(--soft);text-transform:uppercase;letter-spacing:.09em;margin-bottom:10px;}
+.sec{margin:0 14px;}
+.btn-p{width:100%;background:linear-gradient(135deg,var(--sage),var(--sage-d));color:#fff;border:none;border-radius:12px;padding:15px;font-size:15px;font-family:'Lora',serif;font-style:italic;cursor:pointer;box-shadow:0 3px 12px rgba(93,143,114,0.32);transition:all .18s;}
+.btn-p:active{transform:scale(.98);}
+.btn-p:disabled{opacity:.5;cursor:not-allowed;}
+.btn-s{background:var(--sage-p);color:var(--sage-d);border:1px solid var(--sage-l);border-radius:var(--rs);padding:9px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:13px;}
+.gbtn{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:12px 5px;cursor:pointer;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .15s;}
+.gbtn:active{transform:scale(.93);}
+.gbtn.on{background:var(--sage-p);border-color:var(--sage);}
+.gbtn .gi{font-size:20px;}
+.gbtn .gn{font-size:10px;color:var(--mid);font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+.row5{display:flex;gap:5px;margin-bottom:13px;}
+.rbtn{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;padding:8px 2px;font-size:11px;color:var(--mid);cursor:pointer;text-align:center;font-weight:600;font-family:'DM Sans',sans-serif;transition:all .15s;}
+.rbtn:active{transform:scale(.93);}
+.rbtn.on{background:var(--sage-p);border-color:var(--sage);color:var(--deep);}
+.srow{margin-bottom:12px;}
+.srow label{display:flex;justify-content:space-between;font-size:12px;color:var(--mid);font-weight:500;margin-bottom:5px;}
+.srow label span{font-family:'Lora',serif;font-style:italic;color:var(--sage);font-size:11px;}
+input[type=range]{width:100%;appearance:none;height:4px;border-radius:2px;background:linear-gradient(to right,var(--sage-l),var(--sage));outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{appearance:none;width:19px;height:19px;border-radius:50%;background:#fff;border:2px solid var(--sage);box-shadow:0 1px 5px rgba(0,0,0,.14);cursor:pointer;}
+textarea,input[type=text]{width:100%;background:var(--s2);border:1.5px solid var(--border);border-radius:var(--rs);padding:10px 12px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--deep);outline:none;resize:none;transition:border-color .2s;}
+textarea:focus,input[type=text]:focus{border-color:var(--sage);background:#fff;}
+textarea::placeholder,input::placeholder{color:var(--soft);font-style:italic;}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:11px;}
+.chip{background:var(--s2);border:1.5px solid var(--border);border-radius:20px;padding:5px 11px;font-size:11px;font-weight:600;color:var(--mid);cursor:pointer;transition:all .15s;}
+.chip:active{transform:scale(.93);}
+.chip.on{background:var(--sage-p);border-color:var(--sage);color:var(--sage-d);}
+.seg{display:flex;background:var(--s2);border-radius:8px;padding:2px;gap:2px;margin-bottom:13px;}
+.seg button{flex:1;padding:6px 5px;border-radius:6px;border:none;background:none;font-size:11px;font-weight:600;color:var(--soft);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;}
+.seg button.on{background:var(--surface);color:var(--sage-d);box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.stats{display:flex;gap:8px;margin-bottom:11px;}
+.stat{flex:1;background:var(--surface);border-radius:13px;padding:12px 7px;text-align:center;box-shadow:var(--sh);border:1px solid var(--border);}
+.stat .sn{font-family:'Lora',serif;font-size:24px;font-weight:600;color:var(--sage);line-height:1;}
+.stat .sl{font-size:9px;color:var(--soft);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-top:2px;}
+.aff{margin:8px 14px 11px;padding:12px 14px 12px 16px;background:linear-gradient(135deg,var(--sage-p),var(--terra-l));border-radius:13px;border-left:3px solid var(--sage);}
+.aff p{font-family:'Lora',serif;font-style:italic;font-size:13px;color:var(--mid);line-height:1.65;}
+.qe{margin:0 14px 11px;background:var(--surface);border-radius:var(--r);padding:13px 14px;border:1px solid var(--border);box-shadow:var(--sh);}
+.qe-t{font-size:10px;font-weight:600;color:var(--soft);text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px;}
+.qe-row{display:flex;gap:6px;}
+.qe-dot{flex:1;height:32px;border-radius:9px;border:1.5px solid var(--border);background:var(--s2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s;}
+.qe-dot:active{transform:scale(.93);}
+.qe-dot.on{background:var(--sage-p);border-color:var(--sage);}
+.recent{display:flex;gap:8px;margin:0 14px 11px;}
+.rp{flex:1;background:var(--surface);border-radius:12px;padding:11px;border:1px solid var(--border);box-shadow:var(--sh);cursor:pointer;}
+.rp:active{transform:scale(.97);}
+.ri{font-size:18px;margin-bottom:3px;}
+.rt{font-size:11px;font-weight:600;color:var(--deep);}
+.rs{font-size:10px;color:var(--soft);margin-top:1px;}
+.bigbtn{margin:0 14px 11px;background:linear-gradient(135deg,var(--sage),var(--sage-d));color:#fff;border:none;border-radius:var(--r);padding:17px;font-size:16px;font-family:'Lora',serif;font-style:italic;cursor:pointer;width:calc(100% - 28px);display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 16px rgba(93,143,114,0.38);transition:all .18s;}
+.bigbtn:active{transform:scale(.99);}
+.ei{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.ei:last-child{border-bottom:none;}
+.eiw{width:36px;height:36px;border-radius:10px;background:var(--sage-p);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.eb{flex:1;min-width:0;}
+.et{display:flex;justify-content:space-between;align-items:baseline;}
+.etype{font-weight:600;font-size:13px;}
+.edate{font-size:10px;color:var(--soft);flex-shrink:0;margin-left:6px;}
+.esub{font-size:11px;color:var(--mid);margin-top:1px;}
+.enote{font-size:11px;color:var(--soft);font-style:italic;margin-top:2px;font-family:'Lora',serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.edel{background:none;border:none;color:var(--soft);font-size:13px;cursor:pointer;padding:4px;opacity:.4;flex-shrink:0;}
+.edel:active{opacity:1;}
+.pips{display:flex;gap:2px;margin-top:3px;}
+.pip{width:6px;height:6px;border-radius:50%;background:var(--sage-l);}
+.pip.on{background:var(--sage);}
+.fe{padding:10px 0;border-bottom:1px solid var(--border);}
+.fe:last-child{border-bottom:none;}
+.fe-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;}
+.fe-date{font-weight:600;font-size:12px;}
+.fe-del{background:none;border:none;color:var(--soft);font-size:13px;cursor:pointer;opacity:.4;}
+.sbar{display:flex;align-items:center;gap:7px;margin-bottom:3px;}
+.sbl{font-size:10px;color:var(--mid);width:90px;flex-shrink:0;font-weight:600;}
+.sbt{flex:1;height:5px;background:var(--s2);border-radius:2px;overflow:hidden;}
+.sbf{height:100%;border-radius:2px;background:var(--sage);}
+.sbf.hi{background:var(--terra);}
+.fe-note{font-size:11px;color:var(--soft);font-style:italic;margin-top:5px;font-family:'Lora',serif;}
+.food-e{display:flex;gap:9px;padding:10px 0;border-bottom:1px solid var(--border);}
+.food-e:last-child{border-bottom:none;}
+.fdot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0;}
+.fdot.g{background:var(--sage);}.fdot.y{background:var(--gold);}.fdot.r{background:var(--terra);}.fdot.n{background:var(--soft);}
+.ftxt{font-size:13px;color:var(--deep);line-height:1.5;}
+.fmeta{font-size:10px;color:var(--soft);margin-top:2px;}
+.ftags{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px;}
+.ftag{background:var(--s2);border-radius:20px;padding:2px 7px;font-size:10px;font-weight:600;color:var(--mid);}
+.rrow{display:flex;gap:6px;margin-bottom:11px;}
+.rrbtn{flex:1;background:var(--s2);border:1.5px solid var(--border);border-radius:9px;padding:9px 4px;text-align:center;cursor:pointer;font-size:11px;font-weight:600;color:var(--mid);font-family:'DM Sans',sans-serif;transition:all .15s;}
+.rrbtn:active{transform:scale(.93);}
+.rrbtn.on-g{background:#e8f2ec;border-color:var(--sage);color:var(--sage-d);}
+.rrbtn.on-y{background:var(--gold-l);border-color:var(--gold);color:#6b4e10;}
+.rrbtn.on-r{background:var(--terra-l);border-color:var(--terra);color:#7a3620;}
+.approw{display:flex;gap:6px;margin-bottom:11px;}
+.appbtn{flex:1;background:var(--s2);border:1.5px solid var(--border);border-radius:9px;padding:9px 4px;text-align:center;cursor:pointer;font-size:12px;font-weight:600;color:var(--mid);font-family:'DM Sans',sans-serif;transition:all .15s;}
+.appbtn:active{transform:scale(.93);}
+.appbtn.on{background:var(--sage-p);border-color:var(--sage);color:var(--sage-d);}
+.ntrow{display:flex;gap:7px;margin-bottom:12px;}
+.ntbtn{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:11px 5px;text-align:center;cursor:pointer;transition:all .15s;}
+.ntbtn:active{transform:scale(.95);}
+.ntbtn.on{background:var(--sage-p);border-color:var(--sage);}
+.ntbtn .ni2{font-size:19px;margin-bottom:3px;}
+.ntbtn .nl2{font-size:10px;font-weight:600;color:var(--mid);text-transform:uppercase;letter-spacing:.04em;}
+.docf{display:flex;flex-direction:column;gap:8px;margin-bottom:11px;}
+.docf input{margin:0;}
+.nh{padding:12px 0;border-bottom:1px solid var(--border);}
+.nh:last-child{border-bottom:none;}
+.nh-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
+.nh-tag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;padding:2px 7px;border-radius:9px;}
+.nh-tag.j{background:var(--sage-p);color:var(--sage-d);}
+.nh-tag.d{background:var(--sky-l);color:var(--sky);}
+.nh-date{font-size:10px;color:var(--soft);}
+.nh-del{background:none;border:none;color:var(--soft);font-size:13px;cursor:pointer;opacity:.4;}
+.nh-body{font-size:12px;color:var(--mid);line-height:1.6;}
+.nh-body strong{color:var(--deep);font-weight:600;}
+.expbox{background:var(--s2);border-radius:var(--rs);padding:11px;font-size:11px;color:var(--mid);line-height:1.7;max-height:170px;overflow-y:auto;font-family:monospace;margin-bottom:9px;border:1px solid var(--border);white-space:pre-wrap;}
+.bar-chart{display:flex;flex-direction:column;gap:5px;margin-top:4px;}
+.bc-row{display:flex;align-items:center;gap:7px;}
+.bc-lbl{font-size:10px;color:var(--soft);width:28px;text-align:right;flex-shrink:0;}
+.bc-bar{flex:1;height:16px;background:var(--s2);border-radius:3px;overflow:hidden;}
+.bc-fill{height:100%;border-radius:3px;background:linear-gradient(to right,var(--sage-l),var(--sage));transition:width .5s;}
+.bc-val{font-size:10px;color:var(--mid);width:18px;flex-shrink:0;}
+.overlay{position:fixed;inset:0;background:rgba(30,40,32,.48);display:flex;align-items:center;justify-content:center;z-index:999;backdrop-filter:blur(4px);}
+.ob{background:var(--bg);border-radius:20px;padding:30px 22px;text-align:center;max-width:270px;margin:16px;box-shadow:0 16px 50px rgba(0,0,0,.18);}
+.oe{font-size:48px;display:block;margin-bottom:10px;}
+.om{font-family:'Lora',serif;font-size:19px;font-weight:600;color:var(--deep);margin-bottom:6px;}
+.os{font-family:'Lora',serif;font-style:italic;font-size:13px;color:var(--mid);line-height:1.6;margin-bottom:20px;}
+.oc{background:var(--sage);color:#fff;border:none;border-radius:11px;padding:11px 22px;font-size:14px;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;}
+.setup-screen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;padding:32px;}
+.setup-screen .leaf{font-size:48px;margin-bottom:16px;animation:sway 4s ease-in-out infinite;}
+@keyframes sway{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
+.setup-screen h1{font-family:'Lora',serif;font-size:26px;font-weight:600;color:var(--deep);margin-bottom:8px;text-align:center;}
+.setup-screen .sub{font-family:'Lora',serif;font-style:italic;font-size:13px;color:var(--soft);text-align:center;line-height:1.65;margin-bottom:24px;}
+.setup-input-wrap{width:100%;max-width:340px;margin-bottom:12px;}
+.setup-input-wrap label{display:block;font-size:11px;font-weight:600;color:var(--mid);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;}
+.setup-input-wrap input{font-size:13px;padding:12px 14px;}
+.setup-btn{width:100%;max-width:340px;background:linear-gradient(135deg,var(--sage),var(--sage-d));color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-family:'Lora',serif;font-style:italic;cursor:pointer;box-shadow:0 3px 12px rgba(93,143,114,0.32);}
+.setup-note{font-size:11px;color:var(--soft);text-align:center;margin-top:12px;line-height:1.6;max-width:300px;}
+.loading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1001;}
+.loading .leaf{font-size:36px;animation:pulse 1.5s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:.4;transform:scale(.9)}50%{opacity:1;transform:scale(1)}}
+.loading p{font-family:'Lora',serif;font-style:italic;font-size:14px;color:var(--soft);margin-top:14px;}
+.div{height:1px;background:var(--border);margin:11px 0;}
+.empty{text-align:center;padding:26px 10px;font-family:'Lora',serif;font-style:italic;color:var(--soft);font-size:13px;line-height:1.8;}
+.scroll{max-height:300px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.scroll::-webkit-scrollbar{width:2px;}
+.scroll::-webkit-scrollbar-thumb{background:var(--sage-l);}
+</style>
+</head>
+<body>
+<div class="loading" id="loading"><div class="leaf">🌿</div><p id="loading-msg">Loading your journey…</p></div>
+<div class="setup-screen" id="setup-screen" style="display:none">
+  <div class="leaf">🌿</div>
+  <h1>Gentle Movement</h1>
+  <p class="sub">Paste your Apps Script URL to connect your data storage.</p>
+  <div class="setup-input-wrap">
+    <label>Apps Script Web App URL</label>
+    <input type="text" id="script-url-input" placeholder="https://script.google.com/macros/s/…/exec">
+  </div>
+  <button class="setup-btn" onclick="saveScriptUrl()">Connect & Start</button>
+  <p class="setup-note">This connects the app to your private Google Sheet. Stored only on this device. See SETUP.md for instructions.</p>
+</div>
+<div class="app" id="main-app" style="display:none">
+  <div class="pages">
+    <div class="page on" id="pg-home">
+      <div class="ph">
+        <div style="font-size:10px;font-weight:600;color:var(--soft);text-transform:uppercase;letter-spacing:.09em" id="h-greet">Good morning</div>
+        <h1 style="margin-top:3px">Welcome back 🌿</h1>
+        <div style="font-size:12px;color:var(--soft);margin-top:2px" id="h-date"></div>
+      </div>
+      <div class="aff"><p id="h-aff"></p></div>
+      <div class="qe">
+        <div class="qe-t">How's your energy right now?</div>
+        <div class="qe-row">
+          <div class="qe-dot" data-v="1" onclick="setQE(1)">🪫</div>
+          <div class="qe-dot" data-v="2" onclick="setQE(2)">😴</div>
+          <div class="qe-dot" data-v="3" onclick="setQE(3)">😐</div>
+          <div class="qe-dot" data-v="4" onclick="setQE(4)">🙂</div>
+          <div class="qe-dot" data-v="5" onclick="setQE(5)">⚡</div>
+        </div>
+      </div>
+      <div class="stats sec" id="h-stats">
+        <div class="stat"><div class="sn">—</div><div class="sl">Day Streak</div></div>
+        <div class="stat"><div class="sn">—</div><div class="sl">This Week</div></div>
+        <div class="stat"><div class="sn">—</div><div class="sl">Total Moves</div></div>
+      </div>
+      <div class="recent" id="h-recent"></div>
+      <button class="bigbtn" onclick="goTab('move',1)"><span>Log a movement ✦</span><span style="font-size:19px;opacity:.65">→</span></button>
+    </div>
+    <div class="page" id="pg-move">
+      <div class="ph"><h1>Movement</h1><p>Every step is a victory</p></div>
+      <div class="sec">
+        <div class="seg" id="mv-seg">
+          <button class="on" onclick="mvSeg('log',0)">Log</button>
+          <button onclick="mvSeg('chart',1)">Chart</button>
+          <button onclick="mvSeg('history',2)">History</button>
+        </div>
+        <div id="mv-log">
+          <div class="card">
+            <div class="ct">What did you do?</div>
+            <div class="grid3" id="act-grid">
+              <button class="gbtn on" data-t="Walk" onclick="selAct(this)"><span class="gi">🚶</span><span class="gn">Walk</span></button>
+              <button class="gbtn" data-t="Gym" onclick="selAct(this)"><span class="gi">🏋️</span><span class="gn">Gym</span></button>
+              <button class="gbtn" data-t="Stretch" onclick="selAct(this)"><span class="gi">🧘</span><span class="gn">Stretch</span></button>
+              <button class="gbtn" data-t="Bike" onclick="selAct(this)"><span class="gi">🚴</span><span class="gn">Bike</span></button>
+              <button class="gbtn" data-t="Swim" onclick="selAct(this)"><span class="gi">🏊</span><span class="gn">Swim</span></button>
+              <button class="gbtn" data-t="Other" onclick="selAct(this)"><span class="gi">✨</span><span class="gn">Other</span></button>
+            </div>
+            <div class="ct">How long?</div>
+            <div class="row5" id="dur-row">
+              <button class="rbtn on" data-m="5" onclick="selDur(this)">5 min</button>
+              <button class="rbtn" data-m="10" onclick="selDur(this)">10 min</button>
+              <button class="rbtn" data-m="20" onclick="selDur(this)">20 min</button>
+              <button class="rbtn" data-m="30" onclick="selDur(this)">30 min</button>
+              <button class="rbtn" data-m="45" onclick="selDur(this)">45+</button>
+            </div>
+            <div class="srow"><label>Effort <span id="eff-lbl">Comfortable</span></label><input type="range" min="1" max="5" value="2" oninput="updEff(this.value)"></div>
+            <div class="srow"><label>Energy right now <span id="enr-lbl">Moderate</span></label><input type="range" min="1" max="5" value="3" oninput="updEnr(this.value)"></div>
+            <textarea id="mv-note" placeholder="How did it feel? Any notes for your doctor?" rows="3" style="margin-bottom:12px"></textarea>
+            <button class="btn-p" id="mv-save-btn" onclick="logMove()">I moved today 🌿</button>
+          </div>
+        </div>
+        <div id="mv-chart" style="display:none">
+          <div class="card"><div class="ct">Activity — last 4 weeks</div><div id="mv-bar-chart"></div></div>
+          <div class="card"><div class="ct">Energy trend — last 14 days</div><div id="mv-line-chart"></div></div>
+        </div>
+        <div id="mv-hist" style="display:none">
+          <div class="card"><div class="ct">Last 90 days</div><div class="scroll" id="mv-hist-list"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="page" id="pg-feel">
+      <div class="ph"><h1>How I Feel</h1><p>Track for yourself and your doctor</p></div>
+      <div class="sec">
+        <div class="seg" id="fl-seg">
+          <button class="on" onclick="flSeg('log',0)">Log</button>
+          <button onclick="flSeg('trends',1)">Trends</button>
+          <button onclick="flSeg('hist',2)">History</button>
+        </div>
+        <div id="fl-log">
+          <div class="card">
+            <div class="ct">Rate each — 1 = fine, 5 = severe</div>
+            <div id="sym-sliders"></div>
+            <div class="div"></div>
+            <div class="ct">Appetite</div>
+            <div class="approw" id="app-row">
+              <button class="appbtn on" data-v="Normal" onclick="selApp(this)">😐 Normal</button>
+              <button class="appbtn" data-v="Low" onclick="selApp(this)">⬇️ Low</button>
+              <button class="appbtn" data-v="Strong" onclick="selApp(this)">⬆️ Strong</button>
+            </div>
+            <textarea id="fl-note" placeholder="Describe how you're feeling — for you and your doctor" rows="4" style="margin-bottom:12px"></textarea>
+            <button class="btn-p" id="fl-save-btn" onclick="logFeel()">Save check-in</button>
+          </div>
+        </div>
+        <div id="fl-trends" style="display:none">
+          <div class="card"><div class="ct">Symptom averages — last 14 days</div><div id="fl-avgs"></div></div>
+          <div class="card"><div class="ct">Select to compare</div><div class="chips" id="fl-chips"></div><div id="fl-spark"></div></div>
+        </div>
+        <div id="fl-hist" style="display:none">
+          <div class="card"><div class="scroll" id="fl-hist-list"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="page" id="pg-food">
+      <div class="ph"><h1>Food Notes</h1><p>No counting, just describing</p></div>
+      <div class="sec">
+        <div class="seg" id="fd-seg">
+          <button class="on" onclick="fdSeg('log',0)">Log</button>
+          <button onclick="fdSeg('hist',1)">History</button>
+        </div>
+        <div id="fd-log">
+          <div class="card">
+            <div class="ct">How was your eating today?</div>
+            <div class="rrow" id="food-rrow">
+              <button class="rrbtn" data-r="Nourishing" onclick="selFR(this)">🟢 Nourishing</button>
+              <button class="rrbtn" data-r="Okay" onclick="selFR(this)">🟡 Okay</button>
+              <button class="rrbtn" data-r="Rough" onclick="selFR(this)">🔴 Rough</button>
+            </div>
+            <textarea id="fd-note" placeholder="Describe what you ate — as much or as little as you want. No judgment." rows="4" style="margin-bottom:10px"></textarea>
+            <div class="ct">Quick tags (optional)</div>
+            <div class="chips" id="fd-chips">
+              <div class="chip" data-t="Before workout" onclick="togChip(this)">Before workout</div>
+              <div class="chip" data-t="After workout" onclick="togChip(this)">After workout</div>
+              <div class="chip" data-t="Skipped meal" onclick="togChip(this)">Skipped meal</div>
+              <div class="chip" data-t="Felt good after" onclick="togChip(this)">Felt good after</div>
+              <div class="chip" data-t="Felt bad after" onclick="togChip(this)">Felt bad after</div>
+              <div class="chip" data-t="Ate late" onclick="togChip(this)">Ate late</div>
+            </div>
+            <button class="btn-p" id="fd-save-btn" onclick="logFood()">Save food note</button>
+          </div>
+        </div>
+        <div id="fd-hist" style="display:none">
+          <div class="card"><div class="scroll" id="fd-hist-list"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="page" id="pg-notes">
+      <div class="ph"><h1>Notes & Journal</h1><p>Capture everything for your care team</p></div>
+      <div class="sec">
+        <div class="seg" id="nt-seg">
+          <button class="on" onclick="ntSeg('log',0)">New</button>
+          <button onclick="ntSeg('hist',1)">Journal</button>
+          <button onclick="ntSeg('export',2)">Export</button>
+          <button onclick="ntSeg('settings',3)">Settings</button>
+        </div>
+        <div id="nt-log">
+          <div class="card">
+            <div class="ct">Entry type</div>
+            <div class="ntrow">
+              <button class="ntbtn on" data-nt="journal" onclick="selNT(this)"><div class="ni2">📓</div><div class="nl2">Journal</div></button>
+              <button class="ntbtn" data-nt="doctor" onclick="selNT(this)"><div class="ni2">🩺</div><div class="nl2">Doctor Visit</div></button>
+            </div>
+            <div id="nt-journal">
+              <textarea id="nt-jtext" placeholder="Write anything — how you're feeling, observations, thoughts about your health journey…" rows="6" style="margin-bottom:12px"></textarea>
+              <button class="btn-p" id="nt-j-save" onclick="logNote('journal')">Save journal entry</button>
+            </div>
+            <div id="nt-doctor" style="display:none">
+              <div class="docf">
+                <input type="text" id="doc-name" placeholder="Doctor / Practitioner name">
+                <input type="text" id="doc-rep" placeholder="What I reported (symptoms, concerns)">
+                <input type="text" id="doc-said" placeholder="What they said">
+                <input type="text" id="doc-next" placeholder="Next steps / follow-ups">
+              </div>
+              <textarea id="doc-notes" placeholder="Additional notes…" rows="3" style="margin-bottom:12px"></textarea>
+              <button class="btn-p" id="nt-d-save" onclick="logNote('doctor')">Save visit notes</button>
+            </div>
+          </div>
+        </div>
+        <div id="nt-hist" style="display:none"><div class="card"><div class="scroll" id="nt-hist-list"></div></div></div>
+        <div id="nt-export" style="display:none">
+          <div class="card">
+            <div class="ct">Appointment summary</div>
+            <p style="font-size:12px;color:var(--mid);margin-bottom:10px;line-height:1.6">A plain-text summary to share with your doctor.</p>
+            <div class="chips" id="exp-chips">
+              <div class="chip on" data-w="2" onclick="selExpW(this)">2 weeks</div>
+              <div class="chip" data-w="4" onclick="selExpW(this)">4 weeks</div>
+            </div>
+            <div class="expbox" id="exp-box">Tap Generate to create your summary.</div>
+            <div style="display:flex;gap:7px">
+              <button class="btn-s" style="flex:1" onclick="genExp()">Generate ↻</button>
+              <button class="btn-s" style="flex:1" onclick="copyExp()">Copy 📋</button>
+            </div>
+          </div>
+        </div>
+        <div id="nt-settings" style="display:none">
+          <div class="card">
+            <div class="ct">Update script URL</div>
+            <input type="text" id="settings-url-input" style="margin-bottom:10px" placeholder="https://script.google.com/macros/s/…/exec">
+            <button class="btn-p" onclick="updateScriptUrl()">Save URL</button>
+          </div>
+          <div class="card">
+            <div class="ct">Your data</div>
+            <p style="font-size:12px;color:var(--mid);line-height:1.6">Your data lives in a Google Sheet called <strong>GentleMovement</strong> in your Google Drive. You can find it any time at drive.google.com.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <nav id="main-nav">
+    <button class="on" onclick="goTab('home',0)"><span class="ni">🏠</span><span class="nl">Home</span></button>
+    <button onclick="goTab('move',1)"><span class="ni">🚶</span><span class="nl">Move</span></button>
+    <button onclick="goTab('feel',2)"><span class="ni">💚</span><span class="nl">Feel</span></button>
+    <button onclick="goTab('food',3)"><span class="ni">🍽️</span><span class="nl">Food</span></button>
+    <button onclick="goTab('notes',4)"><span class="ni">📋</span><span class="nl">Notes</span></button>
+  </nav>
+</div>
+<div class="overlay" id="overlay" style="display:none">
+  <div class="ob">
+    <span class="oe" id="oe">🌿</span>
+    <div class="om" id="om">Done!</div>
+    <div class="os" id="os">You showed up for yourself.</div>
+    <button class="oc" onclick="closeOv()">Thank you 🌿</button>
+  </div>
+</div>
+<script>
+const SYMS=[{k:'Stomach',l:'Stomach / digestion'},{k:'Nausea',l:'Nausea'},{k:'BrainFog',l:'Head / brain fog'},{k:'Focus',l:'Ability to focus'},{k:'Energy',l:'Energy / fatigue'},{k:'Pain',l:'Pain / body aches'},{k:'Mood',l:'Mood / anxiety'},{k:'Sleep',l:'Sleep quality'},{k:'Dizzy',l:'Dizziness'},{k:'Sinus',l:'Sinuses / allergies / throat'}];
+const EFF_L=['','Very gentle','Comfortable','Moderate','Working hard','Max effort'];
+const ENR_L=['','Running on empty','Low','Moderate','Good','Fully charged'];
+const SYM_L=['','Fine','Mild','Moderate','Significant','Severe'];
+const AFFS=["Every step — no matter how small — is your body healing and growing stronger.","Showing up gently is still showing up. You're doing something remarkable.","Rest is part of recovery. Movement is part of rest. You can't get this wrong.","Your body has been through so much. Every bit of movement is an act of love.","Five minutes counts. Always. No exceptions.","Healing isn't linear. Neither is progress. Both are still real.","The gentlest path is still a path. You're on it.","There is no minimum here. Any movement is a win.","You are doing so much better than you think."];
+const CELS=[{e:'🌿',m:'You did it!',s:'Every movement matters. Especially the gentle ones.'},{e:'✨',m:'Beautiful work.',s:'Your body thanks you for listening to it.'},{e:'🌱',m:'Look at you go.',s:'Small steps forward are still forward.'},{e:'💚',m:'That counts!',s:"Especially when it was hard to start. You showed up."},{e:'🌸',m:'So proud of you.',s:"You're building something sustainable, one day at a time."},{e:'⭐',m:'Yes! You moved!',s:'This is exactly what healing looks like.'}];
+let SCRIPT_URL=localStorage.getItem('gm_script_url')||'';
+let cache={moves:[],feels:[],foods:[],notes:[]};
+let curAct='Walk',curDur=5,curEff=2,curEnr=3,curApp='Normal',curFR=null,curFTags=[],curNT='journal',expWeeks=2,activeSymChips=[];
+async function api(payload){const res=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(payload)});const text=await res.text();try{return JSON.parse(text);}catch(e){throw new Error('Bad response: '+text.slice(0,200));}}
+async function apiAppend(sheet,row){const r=await api({action:'append',sheet,row});if(!r.ok)throw new Error(r.error);}
+async function apiRead(sheet){const r=await api({action:'read',sheet});if(!r.ok)throw new Error(r.error);return r.values||[];}
+async function apiDelete(sheet,id){try{await api({action:'delete',sheet,id:String(id)});}catch(e){}}
+async function boot(){if(!SCRIPT_URL){document.getElementById('loading').style.display='none';document.getElementById('setup-screen').style.display='flex';return;}await loadAndStart();}
+async function saveScriptUrl(){const url=document.getElementById('script-url-input').value.trim();if(!url||!url.startsWith('https://script.google.com')){showOv('⚠️','Check the URL','Make sure you pasted the full Apps Script web app URL.');return;}SCRIPT_URL=url;localStorage.setItem('gm_script_url',url);document.getElementById('setup-screen').style.display='none';document.getElementById('loading').style.display='flex';await loadAndStart();}
+async function updateScriptUrl(){const url=document.getElementById('settings-url-input').value.trim();if(!url)return;SCRIPT_URL=url;localStorage.setItem('gm_script_url',url);showOv('✅','URL saved','Your Apps Script URL has been updated.');}
+async function loadAndStart(){document.getElementById('loading-msg').textContent='Connecting to your data…';try{await loadAllData();document.getElementById('loading').style.display='none';document.getElementById('main-app').style.display='flex';const si=document.getElementById('settings-url-input');if(si)si.value=SCRIPT_URL;initHome();}catch(e){document.getElementById('loading').style.display='none';document.getElementById('setup-screen').style.display='flex';showOv('❌','Connection failed',"Could not reach your Apps Script. Check the URL and make sure it's deployed as a Web App.");}}
+async function loadAllData(){const[mr,fr,fdr,nr]=await Promise.all([apiRead('Moves'),apiRead('Feel'),apiRead('Food'),apiRead('Notes')]);cache.moves=parseRows(mr,rowToMove).filter(m=>dAgo(m.date)<=90);cache.feels=parseRows(fr,rowToFeel);cache.foods=parseRows(fdr,rowToFood);cache.notes=parseRows(nr,rowToNote);}
+function parseRows(rows,fn){if(!rows||rows.length<2)return[];return rows.slice(1).map(r=>fn(r)).filter(Boolean).reverse();}
+function rowToMove(r){if(!r[0])return null;return{id:r[0],date:r[1],type:r[2],duration:+r[3]||5,effort:+r[4]||2,energy:+r[5]||3,note:r[6]||''};}
+function rowToFeel(r){if(!r[0])return null;return{id:r[0],date:r[1],symptoms:{Stomach:+r[2]||1,Nausea:+r[3]||1,BrainFog:+r[4]||1,Focus:+r[5]||1,Energy:+r[6]||1,Pain:+r[7]||1,Mood:+r[8]||1,Sleep:+r[9]||1,Dizzy:+r[10]||1,Sinus:+r[11]||1},appetite:r[12]||'Normal',note:r[13]||''};}
+function rowToFood(r){if(!r[0])return null;return{id:r[0],date:r[1],rating:r[2]||'',tags:r[3]?r[3].split(','):[],note:r[4]||''};}
+function rowToNote(r){if(!r[0])return null;return{id:r[0],date:r[1],type:r[2],text:r[3]||'',doctor:r[4]||'',reported:r[5]||'',said:r[6]||'',next:r[7]||'',notes:r[8]||''};}
+function goTab(name,idx){document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));document.querySelectorAll('#main-nav button').forEach(b=>b.classList.remove('on'));document.getElementById('pg-'+name).classList.add('on');document.querySelectorAll('#main-nav button')[idx].classList.add('on');if(name==='home')initHome();}
+function initHome(){const h=new Date().getHours();document.getElementById('h-greet').textContent=h<12?'Good morning':h<17?'Good afternoon':'Good evening';document.getElementById('h-date').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});document.getElementById('h-aff').textContent=AFFS[Math.floor(Math.random()*AFFS.length)];const moves=cache.moves;const days=[...new Set(moves.map(e=>e.date.slice(0,10)))].sort().reverse();const tod=new Date().toISOString().slice(0,10);const yes=new Date(Date.now()-86400000).toISOString().slice(0,10);let streak=0;if(days.length&&(days[0]===tod||days[0]===yes)){streak=1;for(let i=1;i<days.length;i++){if((new Date(days[i-1])-new Date(days[i]))/86400000===1)streak++;else break;}}const wk=moves.filter(m=>dAgo(m.date)<=7).length;document.getElementById('h-stats').innerHTML=`<div class="stat"><div class="sn">${streak}</div><div class="sl">Day Streak</div></div><div class="stat"><div class="sn">${wk}</div><div class="sl">This Week</div></div><div class="stat"><div class="sn">${moves.length}</div><div class="sl">Total Moves</div></div>`;const rr=document.getElementById('h-recent');rr.innerHTML='';const icons={Walk:'🚶',Gym:'🏋️',Stretch:'🧘',Bike:'🚴',Swim:'🏊',Other:'✨'};if(moves.length){const m=moves[0];rr.innerHTML+=`<div class="rp" onclick="goTab('move',1)"><div class="ri">${icons[m.type]||'✨'}</div><div class="rt">Last move</div><div class="rs">${m.type} · ${m.duration}min</div></div>`;}if(cache.feels.length){const f=cache.feels[0];const avg=(Object.values(f.symptoms).reduce((a,b)=>a+b,0)/10).toFixed(1);rr.innerHTML+=`<div class="rp" onclick="goTab('feel',2)"><div class="ri">💚</div><div class="rt">Last check-in</div><div class="rs">Avg ${avg}/5 · ${relD(f.date)}</div></div>`;}}
+function setQE(v){document.querySelectorAll('.qe-dot').forEach(d=>d.classList.toggle('on',+d.dataset.v===v));}
+function mvSeg(v,i){document.querySelectorAll('#mv-seg button').forEach((b,j)=>b.classList.toggle('on',j===i));document.getElementById('mv-log').style.display=v==='log'?'block':'none';document.getElementById('mv-chart').style.display=v==='chart'?'block':'none';document.getElementById('mv-hist').style.display=v==='history'?'block':'none';if(v==='chart')renderMvChart();if(v==='history')renderMvHist();}
+function selAct(b){document.querySelectorAll('#act-grid .gbtn').forEach(x=>x.classList.remove('on'));b.classList.add('on');curAct=b.dataset.t;}
+function selDur(b){document.querySelectorAll('#dur-row .rbtn').forEach(x=>x.classList.remove('on'));b.classList.add('on');curDur=+b.dataset.m;}
+function updEff(v){curEff=+v;document.getElementById('eff-lbl').textContent=EFF_L[v];}
+function updEnr(v){curEnr=+v;document.getElementById('enr-lbl').textContent=ENR_L[v];}
+async function logMove(){const btn=document.getElementById('mv-save-btn');btn.disabled=true;btn.textContent='Saving…';const id=Date.now().toString(),date=new Date().toISOString(),note=document.getElementById('mv-note').value.trim();try{await apiAppend('Moves',[id,date,curAct,curDur,curEff,curEnr,note]);cache.moves.unshift({id,date,type:curAct,duration:curDur,effort:curEff,energy:curEnr,note});document.getElementById('mv-note').value='';celebrate();initHome();}catch(e){showOv('❌','Save failed','Check your connection and try again.');}btn.disabled=false;btn.textContent='I moved today 🌿';}
+function renderMvChart(){const moves=cache.moves;const weeks=[];for(let w=0;w<4;w++){const cnt=moves.filter(m=>dAgo(m.date)>=w*7&&dAgo(m.date)<(w+1)*7).length;weeks.unshift({label:`Wk ${4-w}`,cnt});}const max=Math.max(...weeks.map(w=>w.cnt),1);document.getElementById('mv-bar-chart').innerHTML='<div class="bar-chart">'+weeks.map(w=>`<div class="bc-row"><span class="bc-lbl">${w.label}</span><div class="bc-bar"><div class="bc-fill" style="width:${w.cnt/max*100}%"></div></div><span class="bc-val">${w.cnt}</span></div>`).join('')+'</div>';const pts=[];for(let i=13;i>=0;i--){const ds=new Date(Date.now()-i*86400000).toISOString().slice(0,10);const dm=moves.filter(m=>m.date.slice(0,10)===ds);pts.push(dm.length?dm.reduce((a,b)=>a+b.energy,0)/dm.length:null);}if(!pts.some(p=>p!==null)){document.getElementById('mv-line-chart').innerHTML='<div class="empty">Log movements to see energy trend.</div>';return;}const W=300,H=80,P=8;const coords=pts.map((p,i)=>({x:P+(i/13)*(W-P*2),y:p!==null?H-P-((p-1)/4)*(H-P*2):null}));let path='';let first=true;coords.forEach(c=>{if(c.y===null)return;if(first){path+=`M${c.x.toFixed(1)},${c.y.toFixed(1)}`;first=false;}else path+=` L${c.x.toFixed(1)},${c.y.toFixed(1)}`;});const dots=coords.filter(c=>c.y!==null).map(c=>`<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="3" fill="#9a7c2c"/>`).join('');document.getElementById('mv-line-chart').innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:80px"><path d="${path}" fill="none" stroke="#a8c8b4" stroke-width="2" stroke-linejoin="round"/><path d="${path} L${W-P},${H} L${P},${H} Z" fill="rgba(168,200,180,0.15)"/>${dots}<text x="${P}" y="${H}" font-size="9" fill="#8a9e8f">14d ago</text><text x="${W-P}" y="${H}" font-size="9" fill="#8a9e8f" text-anchor="end">today</text></svg>`;}
+function renderMvHist(){const moves=cache.moves;const el=document.getElementById('mv-hist-list');const icons={Walk:'🚶',Gym:'🏋️',Stretch:'🧘',Bike:'🚴',Swim:'🏊',Other:'✨'};if(!moves.length){el.innerHTML='<div class="empty">Your movement history will appear here.</div>';return;}el.innerHTML=moves.map(m=>{const pips=Array.from({length:5},(_,i)=>`<div class="pip ${i<m.effort?'on':''}"></div>`).join('');return`<div class="ei"><div class="eiw">${icons[m.type]||'✨'}</div><div class="eb"><div class="et"><span class="etype">${m.type}</span><span class="edate">${fmtD(m.date)}</span></div><div class="esub">${m.duration}min · Energy ${m.energy}/5</div><div class="pips">${pips}</div>${m.note?`<div class="enote">"${m.note}"</div>`:''}</div><button class="edel" onclick="delMove('${m.id}')">✕</button></div>`;}).join('');}
+async function delMove(id){cache.moves=cache.moves.filter(m=>m.id!==id);renderMvHist();initHome();await apiDelete('Moves',id);}
+function buildSymSliders(){document.getElementById('sym-sliders').innerHTML=SYMS.map(s=>`<div class="srow"><label>${s.l} <span id="sl-lbl-${s.k}">Fine</span></label><input type="range" min="1" max="5" value="1" id="sl-${s.k}" oninput="updSL('${s.k}',this.value)"></div>`).join('');}
+function updSL(k,v){document.getElementById('sl-lbl-'+k).textContent=SYM_L[v];}
+function selApp(b){document.querySelectorAll('.appbtn').forEach(x=>x.classList.remove('on'));b.classList.add('on');curApp=b.dataset.v;}
+function flSeg(v,i){document.querySelectorAll('#fl-seg button').forEach((b,j)=>b.classList.toggle('on',j===i));document.getElementById('fl-log').style.display=v==='log'?'block':'none';document.getElementById('fl-trends').style.display=v==='trends'?'block':'none';document.getElementById('fl-hist').style.display=v==='hist'?'block':'none';if(v==='trends')renderFlTrends();if(v==='hist')renderFlHist();}
+async function logFeel(){const btn=document.getElementById('fl-save-btn');btn.disabled=true;btn.textContent='Saving…';const syms={};SYMS.forEach(s=>{const el=document.getElementById('sl-'+s.k);syms[s.k]=el?+el.value:1;});const id=Date.now().toString(),date=new Date().toISOString(),note=document.getElementById('fl-note').value.trim();try{await apiAppend('Feel',[id,date,syms.Stomach,syms.Nausea,syms.BrainFog,syms.Focus,syms.Energy,syms.Pain,syms.Mood,syms.Sleep,syms.Dizzy,syms.Sinus,curApp,note]);cache.feels.unshift({id,date,symptoms:syms,appetite:curApp,note});document.getElementById('fl-note').value='';SYMS.forEach(s=>{const el=document.getElementById('sl-'+s.k);if(el){el.value=1;updSL(s.k,1);}});showOv('💚','Logged!','Your check-in is saved. This will help your doctor.');}catch(e){showOv('❌','Save failed','Check your connection and try again.');}btn.disabled=false;btn.textContent='Save check-in';}
+function renderFlTrends(){const feels=cache.feels.filter(f=>dAgo(f.date)<=14);if(!feels.length){document.getElementById('fl-avgs').innerHTML='<div class="empty">Log check-ins to see trends.</div>';return;}const avgs={};SYMS.forEach(s=>{avgs[s.k]=feels.reduce((a,b)=>a+(b.symptoms[s.k]||1),0)/feels.length;});document.getElementById('fl-avgs').innerHTML='<div style="display:flex;flex-direction:column;gap:5px;margin-top:4px">'+SYMS.map(s=>{const pct=(avgs[s.k]-1)/4*100;const hi=avgs[s.k]>=3.5;return`<div style="display:flex;align-items:center;gap:7px"><span style="font-size:10px;color:var(--mid);width:90px;flex-shrink:0;font-weight:600">${s.l.split('/')[0].trim()}</span><div class="sbt" style="flex:1;height:13px;background:var(--s2);border-radius:3px;overflow:hidden"><div class="sbf ${hi?'hi':''}" style="width:${pct}%;height:100%;border-radius:3px"></div></div><span style="font-size:10px;color:var(--mid);width:26px;text-align:right">${avgs[s.k].toFixed(1)}</span></div>`;}).join('')+'</div>';if(!activeSymChips.length)activeSymChips=SYMS.slice(0,3).map(s=>s.k);document.getElementById('fl-chips').innerHTML=SYMS.slice(0,6).map(s=>`<div class="chip ${activeSymChips.includes(s.k)?'on':''}" data-k="${s.k}" onclick="togFlChip(this)">${s.l.split('/')[0].trim()}</div>`).join('');renderFlSpark(feels);}
+function togFlChip(el){const k=el.dataset.k;el.classList.toggle('on');if(activeSymChips.includes(k))activeSymChips=activeSymChips.filter(x=>x!==k);else activeSymChips.push(k);renderFlSpark(cache.feels.filter(f=>dAgo(f.date)<=14));}
+function renderFlSpark(feels){if(!feels.length)return;const W=300,H=90,P=8;const clrs=['#5d8f72','#b86848','#4a7fa8','#9a7c2c','#8a6b9e','#a8c8b4'];const sorted=[...feels].reverse();let svg=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:90px">`;activeSymChips.forEach((k,ci)=>{const pts=sorted.map((f,i)=>({x:P+(i/(sorted.length-1||1))*(W-P*2),y:H-P-(((f.symptoms[k]||1)-1)/4)*(H-P*2)}));if(!pts.length)return;let path=`M${pts[0].x.toFixed(1)},${pts[0].y.toFixed(1)}`;pts.slice(1).forEach(p=>path+=` L${p.x.toFixed(1)},${p.y.toFixed(1)}`);svg+=`<path d="${path}" fill="none" stroke="${clrs[ci%clrs.length]}" stroke-width="2" opacity=".85"/>`;pts.forEach(p=>svg+=`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="2.5" fill="${clrs[ci%clrs.length]}"/>`);});svg+='</svg>';document.getElementById('fl-spark').innerHTML=svg;}
+function renderFlHist(){const feels=cache.feels;const el=document.getElementById('fl-hist-list');if(!feels.length){el.innerHTML='<div class="empty">Your symptom history will appear here.</div>';return;}el.innerHTML=feels.map(f=>`<div class="fe"><div class="fe-hdr"><span class="fe-date">${fmtD(f.date)}</span><button class="fe-del" onclick="delFeel('${f.id}')">✕</button></div>${SYMS.map(s=>{const v=f.symptoms[s.k]||1;return`<div class="sbar"><span class="sbl">${s.l.split('/')[0].trim()}</span><div class="sbt"><div class="sbf ${v>=4?'hi':''}" style="width:${v/5*100}%"></div></div></div>`;}).join('')}<div style="font-size:10px;color:var(--mid);margin-top:4px">Appetite: ${f.appetite}</div>${f.note?`<div class="fe-note">"${f.note}"</div>`:''}</div>`).join('');}
+async function delFeel(id){cache.feels=cache.feels.filter(f=>f.id!==id);renderFlHist();await apiDelete('Feel',id);}
+function fdSeg(v,i){document.querySelectorAll('#fd-seg button').forEach((b,j)=>b.classList.toggle('on',j===i));document.getElementById('fd-log').style.display=v==='log'?'block':'none';document.getElementById('fd-hist').style.display=v==='hist'?'block':'none';if(v==='hist')renderFdHist();}
+function selFR(b){document.querySelectorAll('#food-rrow .rrbtn').forEach(x=>x.className='rrbtn');curFR=b.dataset.r;if(curFR==='Nourishing')b.classList.add('on-g');else if(curFR==='Okay')b.classList.add('on-y');else b.classList.add('on-r');}
+function togChip(el){el.classList.toggle('on');const t=el.dataset.t;if(curFTags.includes(t))curFTags=curFTags.filter(x=>x!==t);else curFTags.push(t);}
+async function logFood(){const note=document.getElementById('fd-note').value.trim();if(!note){showOv('🍃','Add a note','Just write a word or two about what you ate — no judgment!');return;}const btn=document.getElementById('fd-save-btn');btn.disabled=true;btn.textContent='Saving…';const id=Date.now().toString(),date=new Date().toISOString();try{await apiAppend('Food',[id,date,curFR||'',curFTags.join(','),note]);cache.foods.unshift({id,date,rating:curFR||'',tags:[...curFTags],note});document.getElementById('fd-note').value='';curFR=null;curFTags=[];document.querySelectorAll('#food-rrow .rrbtn').forEach(b=>b.className='rrbtn');document.querySelectorAll('#fd-chips .chip').forEach(c=>c.classList.remove('on'));showOv('🍃','Noted!','No counting, no judgment — just awareness.');}catch(e){showOv('❌','Save failed','Check your connection and try again.');}btn.disabled=false;btn.textContent='Save food note';}
+function renderFdHist(){const foods=cache.foods;const el=document.getElementById('fd-hist-list');if(!foods.length){el.innerHTML='<div class="empty">Your food notes will appear here.</div>';return;}const dc={Nourishing:'g',Okay:'y',Rough:'r'};el.innerHTML=foods.map(f=>`<div class="food-e"><div class="fdot ${dc[f.rating]||'n'}"></div><div style="flex:1"><div class="ftxt">${f.note}</div><div class="fmeta">${fmtD(f.date)}</div>${f.tags?.length?`<div class="ftags">${f.tags.map(t=>`<span class="ftag">${t}</span>`).join('')}</div>`:''}</div></div>`).join('');}
+function ntSeg(v,i){document.querySelectorAll('#nt-seg button').forEach((b,j)=>b.classList.toggle('on',j===i));['log','hist','export','settings'].forEach(x=>document.getElementById('nt-'+x).style.display=x===v?'block':'none');if(v==='hist')renderNtHist();if(v==='settings'){const si=document.getElementById('settings-url-input');if(si)si.value=SCRIPT_URL;}}
+function selNT(b){document.querySelectorAll('.ntbtn').forEach(x=>x.classList.remove('on'));b.classList.add('on');curNT=b.dataset.nt;document.getElementById('nt-journal').style.display=curNT==='journal'?'block':'none';document.getElementById('nt-doctor').style.display=curNT==='doctor'?'block':'none';}
+async function logNote(type){const jBtn=document.getElementById('nt-j-save'),dBtn=document.getElementById('nt-d-save');const btn=type==='journal'?jBtn:dBtn;btn.disabled=true;btn.textContent='Saving…';const id=Date.now().toString(),date=new Date().toISOString();let e={id,date,type},row;if(type==='journal'){const t=document.getElementById('nt-jtext').value.trim();if(!t){btn.disabled=false;btn.textContent='Save journal entry';return;}e.text=t;row=[id,date,'journal',t,'','','','',''];document.getElementById('nt-jtext').value='';}else{e.doctor=document.getElementById('doc-name').value.trim();e.reported=document.getElementById('doc-rep').value.trim();e.said=document.getElementById('doc-said').value.trim();e.next=document.getElementById('doc-next').value.trim();e.notes=document.getElementById('doc-notes').value.trim();row=[id,date,'doctor','',e.doctor,e.reported,e.said,e.next,e.notes];['doc-name','doc-rep','doc-said','doc-next','doc-notes'].forEach(x=>document.getElementById(x).value='');}try{await apiAppend('Notes',row);cache.notes.unshift(e);showOv('📓','Saved!','Your note has been recorded.');}catch(e){showOv('❌','Save failed','Check your connection and try again.');}btn.disabled=false;btn.textContent=type==='journal'?'Save journal entry':'Save visit notes';}
+function renderNtHist(){const notes=cache.notes;const el=document.getElementById('nt-hist-list');if(!notes.length){el.innerHTML='<div class="empty">Your journal and doctor visit notes will appear here.</div>';return;}el.innerHTML=notes.map(n=>`<div class="nh"><div class="nh-hdr"><span class="nh-tag ${n.type==='doctor'?'d':'j'}">${n.type==='doctor'?'🩺 Doctor Visit':'📓 Journal'}</span><span style="display:flex;align-items:center;gap:6px"><span class="nh-date">${fmtD(n.date)}</span><button class="nh-del" onclick="delNote('${n.id}')">✕</button></span></div><div class="nh-body">${n.type==='journal'?n.text:`${n.doctor?`<strong>Doctor:</strong> ${n.doctor}<br>`:''}${n.reported?`<strong>Reported:</strong> ${n.reported}<br>`:''}${n.said?`<strong>Said:</strong> ${n.said}<br>`:''}${n.next?`<strong>Next:</strong> ${n.next}`:''}`}</div></div>`).join('');}
+async function delNote(id){cache.notes=cache.notes.filter(n=>n.id!==id);renderNtHist();await apiDelete('Notes',id);}
+function selExpW(el){expWeeks=+el.dataset.w;document.querySelectorAll('#exp-chips .chip').forEach(c=>c.classList.remove('on'));el.classList.add('on');}
+function genExp(){const days=expWeeks*7;const moves=cache.moves.filter(m=>dAgo(m.date)<=days);const feels=cache.feels.filter(f=>dAgo(f.date)<=days);const foods=cache.foods.filter(f=>dAgo(f.date)<=days);const notes=cache.notes.filter(n=>dAgo(n.date)<=days);let o=`HEALTH SUMMARY — Last ${expWeeks} weeks\nGenerated: ${new Date().toLocaleDateString()}\n${'='.repeat(38)}\n\n`;o+=`MOVEMENT (${moves.length} sessions)\n${'-'.repeat(28)}\n`;if(moves.length)moves.forEach(m=>{o+=`${fmtD(m.date)}: ${m.type}, ${m.duration}min, effort ${m.effort}/5, energy ${m.energy}/5${m.note?' — '+m.note:''}\n`;});else o+='None logged.\n';o+='\n';o+=`SYMPTOM AVERAGES (${feels.length} check-ins)\n${'-'.repeat(28)}\n`;if(feels.length){SYMS.forEach(s=>{const a=feels.reduce((x,f)=>x+(f.symptoms[s.k]||1),0)/feels.length;o+=`${s.l}: ${a.toFixed(1)}/5\n`;});}else o+='None logged.\n';o+='\n';o+=`SYMPTOM NOTES\n${'-'.repeat(28)}\n`;feels.filter(f=>f.note).forEach(f=>{o+=`${fmtD(f.date)}: ${f.note}\n`;});o+='\n';o+=`FOOD NOTES\n${'-'.repeat(28)}\n`;if(foods.length)foods.forEach(f=>{o+=`${fmtD(f.date)}: ${f.note}${f.tags?.length?' ['+f.tags.join(', ')+']':''}\n`;});else o+='None logged.\n';o+='\n';o+=`JOURNAL & DOCTOR VISITS\n${'-'.repeat(28)}\n`;if(notes.length)notes.forEach(n=>{if(n.type==='journal')o+=`${fmtD(n.date)}: ${n.text}\n\n`;else o+=`${fmtD(n.date)} — Dr. ${n.doctor||'unknown'}\n  Reported: ${n.reported||''}\n  Said: ${n.said||''}\n  Next: ${n.next||''}\n\n`;});else o+='None logged.\n';document.getElementById('exp-box').textContent=o;}
+function copyExp(){const t=document.getElementById('exp-box').textContent;if(t.startsWith('Tap')){genExp();return;}navigator.clipboard?.writeText(t).then(()=>showOv('📋','Copied!','Paste it into a message for your doctor.')).catch(()=>alert('Please select and copy manually.'));}
+function celebrate(){const c=CELS[Math.floor(Math.random()*CELS.length)];showOv(c.e,c.m,c.s);}
+function showOv(e,m,s){document.getElementById('oe').textContent=e;document.getElementById('om').textContent=m;document.getElementById('os').textContent=s;document.getElementById('overlay').style.display='flex';}
+function closeOv(){document.getElementById('overlay').style.display='none';}
+function dAgo(d){return Math.floor((Date.now()-new Date(d))/86400000);}
+function fmtD(d){return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});}
+function relD(d){const a=dAgo(d);return a===0?'today':a===1?'yesterday':`${a}d ago`;}
+buildSymSliders();
+boot();
+</script>
+</body>
+</html>
