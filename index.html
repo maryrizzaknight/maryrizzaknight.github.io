@@ -645,12 +645,17 @@ function renderMvHist() {
   var moves = cache.moves;
   var el = document.getElementById("mv-list");
   var icons = {Walk:"🚶",Gym:"🏋️",Stretch:"🧘",Bike:"🚴",Swim:"🏊",Other:"✨"};
+  el.innerHTML = "";
   if (!moves.length) { el.innerHTML = "<div class='empty'>Your movement history will appear here.</div>"; return; }
-  el.innerHTML = moves.map(function(m) {
+  moves.forEach(function(m) {
+    var div = document.createElement("div");
+    div.className = "ei";
     var pips = "";
     for (var i=0;i<5;i++) pips += "<div class='pip"+(i<m.effort?" on":"")+"'></div>";
-    return "<div class='ei'><div class='eiw'>"+(icons[m.type]||"✨")+"</div><div class='eb'><div class='et'><span class='etype'>"+m.type+"</span><span class='edate'>"+fmtD(m.date)+"</span></div><div class='esub'>"+m.duration+" min</div><div class='pips'>"+pips+"</div>"+(m.note?"<div class='enote'>"+m.note+"</div>":"")+"</div><button class='edel' onclick='delMove(""+m.id+"")'>✕</button></div>";
-  }).join("");
+    div.innerHTML = "<div class='eiw'>"+(icons[m.type]||"✨")+"</div><div class='eb'><div class='et'><span class='etype'>"+m.type+"</span><span class='edate'>"+fmtD(m.date)+"</span></div><div class='esub'>"+m.duration+" min</div><div class='pips'>"+pips+"</div>"+(m.note?"<div class='enote'>"+m.note+"</div>":"")+"</div><button class='edel'>✕</button>";
+    (function(id){ div.querySelector(".edel").onclick = function(){ delMove(id); }; })(m.id);
+    el.appendChild(div);
+  });
 }
 
 function delMove(id) {
@@ -724,17 +729,23 @@ function logFeel() {
 function renderFlHist() {
   var feels = cache.feels;
   var el = document.getElementById("fl-list");
+  el.innerHTML = "";
   if (!feels.length) { el.innerHTML = "<div class='empty'>Your symptom history will appear here.</div>"; return; }
   var clr = {none:"#4e8a62",mild:"#c9a84c",moderate:"#c4673a",severe:"#c44a4a",poor:"#c44a4a",fair:"#c9a84c",good:"#4e8a62"};
-  el.innerHTML = feels.map(function(f) {
+  feels.forEach(function(f) {
+    var div = document.createElement("div");
+    div.style.cssText = "padding:11px 0;border-bottom:1px solid var(--border)";
     var active = [];
     Object.keys(f.symptoms).forEach(function(k){ if(f.symptoms[k]&&f.symptoms[k]!=="none") active.push({k:k,v:f.symptoms[k]}); });
     var tags = active.length ? "<div style='display:flex;flex-wrap:wrap;gap:5px;margin-bottom:4px'>" + active.map(function(a){
       var c = clr[a.v]||"#888";
       return "<span style='background:"+c+"22;color:"+c+";border:1px solid "+c+"44;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700'>"+a.k.replace(/_/g," ")+": "+a.v+"</span>";
     }).join("") + "</div>" : "<span style='font-size:12px;color:var(--soft);font-style:italic'>No symptoms logged</span>";
-    return "<div class='fe' style='padding:11px 0;border-bottom:1px solid var(--border)'><div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:8px'><span style='font-weight:700;font-size:12px'>"+fmtD(f.date)+"</span><button style='background:none;border:none;color:var(--soft);font-size:13px;cursor:pointer;opacity:.4' onclick='delFeel(""+f.id+"")'>✕</button></div>"+tags+(f.note?"<div style='font-size:11px;color:var(--soft);font-style:italic;margin-top:6px;font-family:Lora,serif'>""+f.note+""</div>":"")+"</div>";
-  }).join("");
+    var noteHtml = f.note ? "<div style='font-size:11px;color:var(--soft);font-style:italic;margin-top:6px;font-family:Lora,serif'>"+f.note+"</div>" : "";
+    div.innerHTML = "<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:8px'><span style='font-weight:700;font-size:12px'>"+fmtD(f.date)+"</span><button style='background:none;border:none;color:var(--soft);font-size:13px;cursor:pointer;opacity:.4'>✕</button></div>"+tags+noteHtml;
+    (function(id){ div.querySelector("button").onclick = function(){ delFeel(id); }; })(f.id);
+    el.appendChild(div);
+  });
 }
 
 function delFeel(id) {
@@ -951,25 +962,38 @@ function renderVtCharts() {
 
 function renderVtHist(type) {
   var el = document.getElementById("vt-list");
+  el.innerHTML = "";
   if (type==="bp") {
     var bp = cache.bp;
     if (!bp.length) { el.innerHTML="<div class='empty'>No blood pressure readings yet.</div>"; return; }
-    el.innerHTML = bp.map(function(b) {
+    bp.forEach(function(b) {
       var st = bpStatus(b.sys,b.dia);
-      return "<div class='vital-hist-item'><div class='vital-val'>"+b.sys+"/"+b.dia+"<span class='bp-status "+st.cls+"'>"+st.label+"</span></div><div class='vital-meta'><div class='vital-date'>"+fmtD(b.date)+(b.pulse?" · Pulse "+b.pulse:"")+"</div>"+(b.tags?"<div class='vital-note-text'>"+b.tags+"</div>":"")+(b.note?"<div class='vital-note-text'>"+b.note+"</div>":"")+"</div><button class='vital-del' onclick='delBP(""+b.id+"")'>✕</button></div>";
-    }).join("");
+      var div = document.createElement("div");
+      div.className = "vital-hist-item";
+      div.innerHTML = "<div class='vital-val'>"+b.sys+"/"+b.dia+"<span class='bp-status "+st.cls+"'>"+st.label+"</span></div><div class='vital-meta'><div class='vital-date'>"+fmtD(b.date)+(b.pulse?" · Pulse "+b.pulse:"")+"</div>"+(b.tags?"<div class='vital-note-text'>"+b.tags+"</div>":"")+(b.note?"<div class='vital-note-text'>"+b.note+"</div>":"")+"</div><button class='vital-del'>✕</button>";
+      (function(id){ div.querySelector(".vital-del").onclick = function(){ delBP(id); }; })(b.id);
+      el.appendChild(div);
+    });
   } else if (type==="hr") {
     var hr = cache.hr;
     if (!hr.length) { el.innerHTML="<div class='empty'>No heart rate readings yet.</div>"; return; }
-    el.innerHTML = hr.map(function(h) {
-      return "<div class='vital-hist-item'><div class='vital-val'>"+h.bpm+" bpm</div><div class='vital-meta'><div class='vital-date'>"+fmtD(h.date)+"</div><div class='vital-note-text'>"+h.context+"</div></div><button class='vital-del' onclick='delHR(""+h.id+"")'>✕</button></div>";
-    }).join("");
+    hr.forEach(function(h) {
+      var div = document.createElement("div");
+      div.className = "vital-hist-item";
+      div.innerHTML = "<div class='vital-val'>"+h.bpm+" bpm</div><div class='vital-meta'><div class='vital-date'>"+fmtD(h.date)+"</div><div class='vital-note-text'>"+h.context+"</div></div><button class='vital-del'>✕</button>";
+      (function(id){ div.querySelector(".vital-del").onclick = function(){ delHR(id); }; })(h.id);
+      el.appendChild(div);
+    });
   } else {
     var wt = cache.weight;
     if (!wt.length) { el.innerHTML="<div class='empty'>No weight readings yet.</div>"; return; }
-    el.innerHTML = wt.map(function(w) {
-      return "<div class='vital-hist-item'><div class='vital-val'>"+w.val+" "+w.unit+"</div><div class='vital-meta'><div class='vital-date'>"+fmtD(w.date)+"</div></div><button class='vital-del' onclick='delWeight(""+w.id+"")'>✕</button></div>";
-    }).join("");
+    wt.forEach(function(w) {
+      var div = document.createElement("div");
+      div.className = "vital-hist-item";
+      div.innerHTML = "<div class='vital-val'>"+w.val+" "+w.unit+"</div><div class='vital-meta'><div class='vital-date'>"+fmtD(w.date)+"</div></div><button class='vital-del'>✕</button>";
+      (function(id){ div.querySelector(".vital-del").onclick = function(){ delWeight(id); }; })(w.id);
+      el.appendChild(div);
+    });
   }
 }
 
@@ -984,57 +1008,33 @@ function genExp() {
   var moves = cache.moves.filter(function(m){return dAgo(m.date)<=days;});
   var feels = cache.feels.filter(function(f){return dAgo(f.date)<=days;});
   var bp = cache.bp.filter(function(b){return dAgo(b.date)<=days;});
-  var hr = cache.hr.filter(function(h){return dAgo(h.date)<=days;});
   var wt = cache.weight.filter(function(w){return dAgo(w.date)<=days;});
-  var o = "HEALTH SUMMARY - Last "+expWeeks+" weeks
-Generated: "+new Date().toLocaleDateString()+"
-"+"=".repeat(40)+"
-
-";
-  o += "BLOOD PRESSURE ("+bp.length+" readings)
-"+"-".repeat(30)+"
-";
+  var NL = "\n";
+  var SEP = "=".repeat(40);
+  var HR = "-".repeat(30);
+  var o = "HEALTH SUMMARY - Last "+expWeeks+" weeks"+NL;
+  o += "Generated: "+new Date().toLocaleDateString()+NL+SEP+NL+NL;
+  o += "BLOOD PRESSURE ("+bp.length+" readings)"+NL+HR+NL;
   if (bp.length) {
     var avgSys = Math.round(bp.reduce(function(a,b){return a+b.sys;},0)/bp.length);
     var avgDia = Math.round(bp.reduce(function(a,b){return a+b.dia;},0)/bp.length);
-    o += "Average: "+avgSys+"/"+avgDia+" mmHg
-";
-    bp.forEach(function(b){ var st=bpStatus(b.sys,b.dia); o+=fmtD(b.date)+": "+b.sys+"/"+b.dia+" ("+st.label+")"+(b.pulse?" pulse "+b.pulse:"")+(b.tags?" ["+b.tags+"]":"")+(b.note?" - "+b.note:"")+"
-"; });
-  } else o += "None logged.
-";
-  o += "
-WEIGHT
-"+"-".repeat(30)+"
-";
-  if (wt.length) wt.forEach(function(w){o+=fmtD(w.date)+": "+w.val+" "+w.unit+"
-";}); else o+="None logged.
-";
-  o += "
-MOVEMENT ("+moves.length+" sessions)
-"+"-".repeat(30)+"
-";
-  if (moves.length) moves.forEach(function(m){o+=fmtD(m.date)+": "+m.type+", "+m.duration+"min"+(m.note?" - "+m.note:"")+"
-";}); else o+="None logged.
-";
-  o += "
-SYMPTOM CHECK-INS ("+feels.length+" entries)
-"+"-".repeat(30)+"
-";
+    o += "Average: "+avgSys+"/"+avgDia+" mmHg"+NL;
+    bp.forEach(function(b){ var st=bpStatus(b.sys,b.dia); o+=fmtD(b.date)+": "+b.sys+"/"+b.dia+" ("+st.label+")"+(b.pulse?" pulse "+b.pulse:"")+(b.tags?" ["+b.tags+"]":"")+(b.note?" - "+b.note:"")+NL; });
+  } else { o += "None logged."+NL; }
+  o += NL+"WEIGHT"+NL+HR+NL;
+  if (wt.length) { wt.forEach(function(w){o+=fmtD(w.date)+": "+w.val+" "+w.unit+NL;}); } else { o+="None logged."+NL; }
+  o += NL+"MOVEMENT ("+moves.length+" sessions)"+NL+HR+NL;
+  if (moves.length) { moves.forEach(function(m){o+=fmtD(m.date)+": "+m.type+", "+m.duration+"min"+(m.note?" - "+m.note:"")+NL;}); } else { o+="None logged."+NL; }
+  o += NL+"SYMPTOM CHECK-INS ("+feels.length+" entries)"+NL+HR+NL;
   if (feels.length) {
     var allSyms = {};
     feels.forEach(function(f){ Object.keys(f.symptoms).forEach(function(k){ var v=f.symptoms[k]; if(v&&v!=="none"){ if(!allSyms[k]) allSyms[k]=[]; allSyms[k].push(v); } }); });
     var freq = Object.keys(allSyms).filter(function(k){return allSyms[k].length>=2;});
-    if (freq.length) { o+="Frequently reported:
-"; freq.forEach(function(k){o+="  "+k.replace(/_/g," ")+": "+allSyms[k].join(", ")+"
-";}); }
-    feels.filter(function(f){return f.note;}).forEach(function(f){o+=fmtD(f.date)+": "+f.note+"
-";});
-  } else o+="None logged.
-";
+    if (freq.length) { o+="Frequently reported:"+NL; freq.forEach(function(k){o+="  "+k.replace(/_/g," ")+": "+allSyms[k].join(", ")+NL;}); }
+    feels.filter(function(f){return f.note;}).forEach(function(f){o+=fmtD(f.date)+": "+f.note+NL;});
+  } else { o+="None logged."+NL; }
   document.getElementById("exp-box").textContent = o;
 }
-
 function copyExp() {
   var t = document.getElementById("exp-box").textContent;
   if (t.indexOf("Tap") === 0) { genExp(); return; }
