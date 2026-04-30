@@ -185,6 +185,10 @@ select{width:100%;background:var(--green-mist);border:1.5px solid var(--border);
 .loading p{font-family:"Lora",serif;font-style:italic;font-size:15px;color:rgba(255,255,255,0.5);margin-top:16px;}
 .empty{text-align:center;padding:28px 12px;font-family:"Lora",serif;font-style:italic;color:var(--soft);font-size:14px;line-height:1.8;}
 .scroll{max-height:320px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.glance-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);}
+.glance-row:last-child{border-bottom:none;}
+.glance-label{font-size:11px;font-weight:700;color:var(--soft);text-transform:uppercase;letter-spacing:.07em;}
+.glance-val{font-size:13px;font-weight:600;color:var(--deep);text-align:right;}
 </style>
 </head>
 <body>
@@ -210,6 +214,7 @@ select{width:100%;background:var(--green-mist);border:1.5px solid var(--border);
       </div>
       <div style="height:16px"></div>
       <div class="aff-card"><p id="h-aff"></p></div>
+      <div class="card sec" id="summary-card" style="margin-bottom:12px"></div>
       <div class="stats-strip" id="h-stats">
         <div class="stat-item"><span class="sn">-</span><span class="sl">Streak</span></div>
         <div class="stat-item"><span class="sn">-</span><span class="sl">This Week</span></div>
@@ -283,9 +288,14 @@ select{width:100%;background:var(--green-mist);border:1.5px solid var(--border);
       <div class="sec">
         <div class="seg" id="fl-seg">
           <button class="on" onclick="flSeg('log',0)">Log</button>
-          <button onclick="flSeg('hist',1)">History</button>
+          <button onclick="flSeg('trends',1)">Trends</button>
+          <button onclick="flSeg('hist',2)">History</button>
         </div>
         <div id="fl-log"><div class="card" id="feel-form"></div></div>
+        <div id="fl-trends" style="display:none">
+          <div class="card"><div class="ct">Symptom averages — last 14 days</div><div id="fl-avgs"></div></div>
+          <div class="card"><div class="ct">Top symptom trends over time</div><div id="fl-spark"></div></div>
+        </div>
         <div id="fl-hist" style="display:none"><div class="card"><div class="scroll" id="fl-list"></div></div></div>
       </div>
     </div>
@@ -563,13 +573,12 @@ function initHome() {
     }
   }
   var wk = moves.filter(function(m){return dAgo(m.date)<=7;}).length;
-  var lastBP = cache.bp.length ? (cache.bp[0].sys+"/"+cache.bp[0].dia) : "-";
-  var lastWt = cache.weight.length ? (cache.weight[0].val+" "+cache.weight[0].unit) : "-";
+  var mo = moves.filter(function(m){return dAgo(m.date)<=30;}).length;
   document.getElementById("h-stats").innerHTML =
     "<div class='stat-item'><span class='sn'>"+streak+"</span><span class='sl'>Streak</span></div>" +
     "<div class='stat-item'><span class='sn'>"+wk+"</span><span class='sl'>This Week</span></div>" +
-    "<div class='stat-item'><span class='sn' style='font-size:13px;padding-top:3px'>"+lastBP+"</span><span class='sl'>Last BP</span></div>" +
-    "<div class='stat-item'><span class='sn' style='font-size:13px;padding-top:3px'>"+lastWt+"</span><span class='sl'>Weight</span></div>";
+    "<div class='stat-item'><span class='sn'>"+mo+"</span><span class='sl'>This Month</span></div>" +
+    "<div class='stat-item'><span class='sn'>"+moves.length+"</span><span class='sl'>Total</span></div>";
   var icons = {Walk:"🚶",Gym:"🏋️",Stretch:"🧘",Bike:"🚴",Swim:"🏊",Other:"✨"};
   var tc = document.getElementById("today-card");
   var todayMoves = moves.filter(function(m){return m.date.slice(0,10)===tod;});
@@ -580,6 +589,57 @@ function initHome() {
       return "<div class='today-item'><div class='today-icon'>"+(icons[m.type]||"✨")+"</div><div><div class='today-type'>"+m.type+"</div><div class='today-sub'>"+m.duration+" min"+(m.note?" · "+m.note:"")+"</div></div></div>";
     }).join("");
   }
+  // Summary card
+  var sc = document.getElementById("summary-card");
+  if (sc) {
+    var d14 = 14;
+    var bpW = cache.bp.filter(function(b){return dAgo(b.date)<=d14;});
+    var wtW = cache.weight.filter(function(w){return dAgo(w.date)<=d14;});
+    var flW = cache.feels.filter(function(f){return dAgo(f.date)<=d14;});
+    var mvW = moves.filter(function(m){return dAgo(m.date)<=d14;});
+    var mvDays = new Set(mvW.map(function(m){return m.date.slice(0,10);})).size;
+    var html = "<div class='ct'>Last 14 days at a glance</div>";
+    // BP avg
+    if (bpW.length) {
+      var avgS = Math.round(bpW.reduce(function(a,b){return a+b.sys;},0)/bpW.length);
+      var avgD = Math.round(bpW.reduce(function(a,b){return a+b.dia;},0)/bpW.length);
+      var st14 = bpStatus(avgS,avgD);
+      html += "<div class='glance-row'><span class='glance-label'>Avg BP</span><span class='glance-val'>"+avgS+"/"+avgD+" <span class='bp-status "+st14.cls+"'>"+st14.label+"</span></span></div>";
+    }
+    // Weight change
+    if (wtW.length >= 2) {
+      var wtFirst = wtW[wtW.length-1].val;
+      var wtLast = wtW[0].val;
+      var wtDiff = (wtLast - wtFirst).toFixed(1);
+      var wtArr = wtDiff > 0 ? "↑" : wtDiff < 0 ? "↓" : "→";
+      html += "<div class='glance-row'><span class='glance-label'>Weight</span><span class='glance-val'>"+wtArr+" "+Math.abs(wtDiff)+" "+wtW[0].unit+"</span></div>";
+    } else if (wtW.length === 1) {
+      html += "<div class='glance-row'><span class='glance-label'>Weight</span><span class='glance-val'>"+wtW[0].val+" "+wtW[0].unit+"</span></div>";
+    }
+    // Movement
+    html += "<div class='glance-row'><span class='glance-label'>Movement</span><span class='glance-val'>"+mvDays+" of 14 days active</span></div>";
+    // Top symptoms
+    if (flW.length) {
+      var symCounts = {};
+      flW.forEach(function(f){
+        Object.keys(f.symptoms).forEach(function(k){
+          var v = f.symptoms[k];
+          if (v && v !== "none") {
+            symCounts[k] = (symCounts[k]||0) + (v==="severe"?3:v==="moderate"?2:1);
+          }
+        });
+      });
+      var topSyms = Object.keys(symCounts).sort(function(a,b){return symCounts[b]-symCounts[a];}).slice(0,3);
+      if (topSyms.length) {
+        html += "<div class='glance-row'><span class='glance-label'>Top symptoms</span><span class='glance-val' style='font-size:11px'>"+topSyms.map(function(s){return s.replace(/_/g," ");}).join(", ")+"</span></div>";
+      }
+    }
+    if (bpW.length===0 && wtW.length===0 && flW.length===0 && mvW.length===0) {
+      html = "<div class='ct'>Last 14 days at a glance</div><p style='font-family:Lora,serif;font-style:italic;font-size:13px;color:var(--soft);line-height:1.6'>Start logging to see your summary here.</p>";
+    }
+    sc.innerHTML = html;
+  }
+  // Trend cards
   var tr = document.getElementById("trend-row");
   tr.innerHTML = "";
   if (cache.bp.length) {
@@ -704,7 +764,9 @@ function setSym(btn) {
 function flSeg(v,i) {
   document.querySelectorAll("#fl-seg button").forEach(function(b,j){b.classList.toggle("on",j===i);});
   document.getElementById("fl-log").style.display = v==="log"?"block":"none";
+  document.getElementById("fl-trends").style.display = v==="trends"?"block":"none";
   document.getElementById("fl-hist").style.display = v==="hist"?"block":"none";
+  if (v==="trends") renderFlTrends();
   if (v==="hist") renderFlHist();
 }
 
@@ -726,25 +788,124 @@ function logFeel() {
   });
 }
 
+function renderFlTrends() {
+  var feels = cache.feels.filter(function(f){return dAgo(f.date)<=14;});
+  var avgsEl = document.getElementById("fl-avgs");
+  var sparkEl = document.getElementById("fl-spark");
+  if (!avgsEl) return;
+  if (!feels.length) {
+    avgsEl.innerHTML = "<div class='empty'>Log check-ins to see trends.</div>";
+    if (sparkEl) sparkEl.innerHTML = "";
+    return;
+  }
+  var SYM_KEYS = ["Indigestion","Nausea","Bloating","Cramps","Diarrhea","Appetite","Dizziness","Headache","Focus___brain_fog","Stuffiness","Itchiness","Hives","Throat_irritation","Fatigue","Energy_level","Irritability___mood_swings","Anxiety","Sleep_quality","Joint_pain","Muscle_pain","Throat_pain","Abdominal_pain","Heart_racing___palpitations","Shortness_of_breath"];
+  var valMap = {none:0,mild:1,fair:1,moderate:2,poor:2,severe:3};
+  var avgs = {};
+  SYM_KEYS.forEach(function(k){
+    var vals = feels.map(function(f){return valMap[f.symptoms[k]]||0;});
+    avgs[k] = vals.reduce(function(a,b){return a+b;},0)/vals.length;
+  });
+  var active = SYM_KEYS.filter(function(k){return avgs[k]>0;});
+  if (!active.length) {
+    avgsEl.innerHTML = "<div class='empty'>No symptoms reported in the last 14 days.</div>";
+    return;
+  }
+  active.sort(function(a,b){return avgs[b]-avgs[a];});
+  var html = "<div style='display:flex;flex-direction:column;gap:6px;margin-top:4px'>";
+  active.forEach(function(k){
+    var pct = avgs[k]/3*100;
+    var col = avgs[k]>=2?"var(--terra)":avgs[k]>=1?"var(--gold)":"var(--green)";
+    var lbl = k.replace(/_+/g," ");
+    html += "<div style='display:flex;align-items:center;gap:8px'>";
+    html += "<span style='font-size:10px;color:var(--mid);width:120px;flex-shrink:0;font-weight:600'>"+lbl+"</span>";
+    html += "<div style='flex:1;height:12px;background:var(--sand);border-radius:3px;overflow:hidden'><div style='width:"+pct+"%;height:100%;border-radius:3px;background:"+col+"'></div></div>";
+    html += "<span style='font-size:10px;color:var(--mid);width:50px;text-align:right'>"+(avgs[k]>=2?"Moderate":avgs[k]>=1?"Mild":"Low")+"</span>";
+    html += "</div>";
+  });
+  html += "</div>";
+  avgsEl.innerHTML = html;
+  // Sparkline for top 3
+  if (!sparkEl) return;
+  var top3 = active.slice(0,3);
+  var sorted = feels.slice().reverse();
+  var W=300,H=80,P=8;
+  var clrs=["#4e8a62","#c4673a","#4a7fa8"];
+  var svg = "<svg viewBox='0 0 "+W+" "+H+"' style='width:100%;height:80px'>";
+  top3.forEach(function(k,ci){
+    var pts = sorted.map(function(f,i){
+      var v = valMap[f.symptoms[k]]||0;
+      return {x:P+(i/(sorted.length-1||1))*(W-P*2), y:H-P-(v/3)*(H-P*2)};
+    });
+    if (pts.length < 2) return;
+    var path = "M"+pts[0].x.toFixed(1)+","+pts[0].y.toFixed(1);
+    for (var i=1;i<pts.length;i++) path += " L"+pts[i].x.toFixed(1)+","+pts[i].y.toFixed(1);
+    svg += "<path d='"+path+"' fill='none' stroke='"+clrs[ci]+"' stroke-width='2' opacity='.85'/>";
+    pts.forEach(function(p){svg+="<circle cx='"+p.x.toFixed(1)+"' cy='"+p.y.toFixed(1)+"' r='2.5' fill='"+clrs[ci]+"'/>";});
+  });
+  svg += "</svg>";
+  var legend = "<div style='display:flex;gap:10px;margin-top:6px;flex-wrap:wrap'>";
+  top3.forEach(function(k,ci){
+    legend += "<span style='font-size:10px;font-weight:700;color:"+clrs[ci]+"'>● "+k.replace(/_+/g," ")+"</span>";
+  });
+  legend += "</div>";
+  sparkEl.innerHTML = svg + legend;
+}
+
 function renderFlHist() {
   var feels = cache.feels;
   var el = document.getElementById("fl-list");
   el.innerHTML = "";
   if (!feels.length) { el.innerHTML = "<div class='empty'>Your symptom history will appear here.</div>"; return; }
-  var clr = {none:"#4e8a62",mild:"#c9a84c",moderate:"#c4673a",severe:"#c44a4a",poor:"#c44a4a",fair:"#c9a84c",good:"#4e8a62"};
+  var SYMS = [
+    {k:"Indigestion",l:"Indigestion"},{k:"Nausea",l:"Nausea"},{k:"Bloating",l:"Bloating"},
+    {k:"Cramps",l:"Cramps"},{k:"Diarrhea",l:"Diarrhea"},{k:"Appetite",l:"Appetite"},
+    {k:"Dizziness",l:"Dizziness"},{k:"Headache",l:"Headache"},{k:"Focus___brain_fog",l:"Brain fog"},
+    {k:"Fatigue",l:"Fatigue"},{k:"Energy_level",l:"Energy"},{k:"Irritability___mood_swings",l:"Mood"},
+    {k:"Anxiety",l:"Anxiety"},{k:"Sleep_quality",l:"Sleep"},{k:"Joint_pain",l:"Joint pain"},
+    {k:"Muscle_pain",l:"Muscle pain"},{k:"Heart_racing___palpitations",l:"Heart racing"},
+    {k:"Shortness_of_breath",l:"Shortness of breath"}
+  ];
+  var valMap = {none:0,mild:1,fair:1,moderate:2,poor:2,severe:3};
+  var colMap = {0:"var(--green)",1:"var(--gold)",2:"var(--terra)",3:"#c44a4a"};
   feels.forEach(function(f) {
-    var div = document.createElement("div");
-    div.style.cssText = "padding:11px 0;border-bottom:1px solid var(--border)";
-    var active = [];
-    Object.keys(f.symptoms).forEach(function(k){ if(f.symptoms[k]&&f.symptoms[k]!=="none") active.push({k:k,v:f.symptoms[k]}); });
-    var tags = active.length ? "<div style='display:flex;flex-wrap:wrap;gap:5px;margin-bottom:4px'>" + active.map(function(a){
-      var c = clr[a.v]||"#888";
-      return "<span style='background:"+c+"22;color:"+c+";border:1px solid "+c+"44;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700'>"+a.k.replace(/_/g," ")+": "+a.v+"</span>";
-    }).join("") + "</div>" : "<span style='font-size:12px;color:var(--soft);font-style:italic'>No symptoms logged</span>";
-    var noteHtml = f.note ? "<div style='font-size:11px;color:var(--soft);font-style:italic;margin-top:6px;font-family:Lora,serif'>"+f.note+"</div>" : "";
-    div.innerHTML = "<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:8px'><span style='font-weight:700;font-size:12px'>"+fmtD(f.date)+"</span><button style='background:none;border:none;color:var(--soft);font-size:13px;cursor:pointer;opacity:.4'>✕</button></div>"+tags+noteHtml;
-    (function(id){ div.querySelector("button").onclick = function(){ delFeel(id); }; })(f.id);
-    el.appendChild(div);
+    var wrap = document.createElement("div");
+    wrap.style.cssText = "padding:12px 0;border-bottom:1px solid var(--border)";
+    var hdr = document.createElement("div");
+    hdr.style.cssText = "display:flex;justify-content:space-between;align-items:center;margin-bottom:10px";
+    var dateSpan = document.createElement("span");
+    dateSpan.style.cssText = "font-weight:700;font-size:12px";
+    dateSpan.textContent = fmtD(f.date);
+    var delBtn = document.createElement("button");
+    delBtn.style.cssText = "background:none;border:none;color:var(--soft);font-size:13px;cursor:pointer;opacity:.4";
+    delBtn.textContent = "✕";
+    (function(id){ delBtn.onclick = function(){ delFeel(id); }; })(f.id);
+    hdr.appendChild(dateSpan);
+    hdr.appendChild(delBtn);
+    wrap.appendChild(hdr);
+    var activeSym = SYMS.filter(function(s){ return f.symptoms[s.k] && f.symptoms[s.k] !== "none"; });
+    if (activeSym.length) {
+      activeSym.forEach(function(s) {
+        var v = valMap[f.symptoms[s.k]]||0;
+        var pct = v/3*100;
+        var col = colMap[v];
+        var row = document.createElement("div");
+        row.style.cssText = "display:flex;align-items:center;gap:8px;margin-bottom:5px";
+        row.innerHTML = "<span style='font-size:10px;color:var(--mid);width:90px;flex-shrink:0;font-weight:600'>"+s.l+"</span><div style='flex:1;height:8px;background:var(--sand);border-radius:3px;overflow:hidden'><div style='width:"+pct+"%;height:100%;border-radius:3px;background:"+col+"'></div></div><span style='font-size:10px;color:var(--mid);width:55px;text-align:right'>"+f.symptoms[s.k]+"</span>";
+        wrap.appendChild(row);
+      });
+    } else {
+      var none = document.createElement("p");
+      none.style.cssText = "font-size:12px;color:var(--soft);font-style:italic";
+      none.textContent = "No symptoms reported";
+      wrap.appendChild(none);
+    }
+    if (f.note) {
+      var note = document.createElement("div");
+      note.style.cssText = "font-size:11px;color:var(--soft);font-style:italic;margin-top:6px;font-family:Lora,serif";
+      note.textContent = f.note;
+      wrap.appendChild(note);
+    }
+    el.appendChild(wrap);
   });
 }
 
