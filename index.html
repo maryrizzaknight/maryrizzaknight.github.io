@@ -266,6 +266,11 @@ select{width:100%;background:var(--green-mist);border:1.5px solid var(--border);
             <div style="display:flex;gap:8px;margin-top:16px">
               <button class="btn-p" id="play-pause-btn" onclick="togglePlayPause()">Pause</button>
             </div>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+              <span style="font-size:11px;color:var(--soft);font-weight:600;text-transform:uppercase;letter-spacing:.07em">Speed</span>
+              <input type="range" min="0.7" max="1.4" step="0.1" value="1.0" id="speed-slider" oninput="updateSpeed(this.value)" style="flex:1">
+              <span style="font-size:11px;color:var(--mid);font-weight:600;width:28px" id="speed-label">1.0x</span>
+            </div>
             <div style="margin-top:10px;background:var(--sand);border-radius:4px;height:4px;overflow:hidden">
               <div id="session-progress" style="height:100%;background:var(--green);width:0%;transition:width 1s linear;border-radius:4px"></div>
             </div>
@@ -1353,7 +1358,7 @@ function playStep() {
   var step = curSession.steps[curStepIdx];
   document.getElementById("session-text").textContent = step.text;
   animateBreath();
-  speak(step.text, 0.82, function() {
+  speak(step.text, curSpeechRate, function() {
     if (sessionPaused) return;
     function advance() {
       if (sessionPaused) return;
@@ -1368,7 +1373,7 @@ function playStep() {
       var cue = cues[Math.floor(Math.random() * cues.length)];
       stepTimer = setTimeout(function() {
         if (sessionPaused) return;
-        speak(cue, 0.75, function() {
+        speak(cue, 0.9, function() {
           if (sessionPaused) return;
           stepTimer = setTimeout(advance, Math.floor(step.pause / 2) * 1000);
         });
@@ -1380,11 +1385,12 @@ function playStep() {
 }
 
 var selectedVoice = null;
+var curSpeechRate = 1.0;
 function speak(text, rate, onEnd) {
   if (!synth) { if (onEnd) setTimeout(onEnd, 1000); return; }
   synth.cancel();
   var utt = new SpeechSynthesisUtterance(text);
-  utt.rate = rate || 0.82;
+  utt.rate = rate || curSpeechRate;
   utt.pitch = 0.92;
   utt.volume = 1;
   if (!selectedVoice) {
@@ -1419,6 +1425,11 @@ function togglePlayPause() {
   } else {
     playStep();
   }
+}
+
+function updateSpeed(val) {
+  curSpeechRate = parseFloat(val);
+  document.getElementById("speed-label").textContent = parseFloat(val).toFixed(1) + "x";
 }
 
 function stopSession() {
